@@ -1,0 +1,19 @@
+{
+  "package_id": "com.onsa.tuner",
+  "edition": "202601",
+  "name": "Onsa",
+  "version": "0.1.0",
+  "min_app_version": "0.1.0",
+  "min_sdk_version": "0.0.7",
+  "tagline": "Chromatic tuner using the built-in microphone",
+  "description": "Onsa is a real-time chromatic tuner. It uses the phone's built-in microphone to detect pitch, then shows the nearest semitone, the frequency in Hz, and a cent-deviation meter on Even G2.",
+  "author": "onsa",
+  "entrypoint": "index.html",
+  "supported_languages": ["ja", "en"],
+  "permissions": [
+    {
+      "name": "phone-microphone",
+      "desc": "Uses the phone microphone to analyze pitch and show the nearest note on your glasses."
+    }
+  ]
+}

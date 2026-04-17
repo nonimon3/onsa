@@ -1,0 +1,29 @@
+{
+  "name": "onsa",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Even G2 built-in-mic chromatic tuner",
+  "type": "module",
+  "scripts": {
+    "start": "concurrently -k -n server,qr -c blue,green \"npm:_serve\" \"npm:_qr\"",
+    "start:https": "cross-env VITE_HTTPS=1 concurrently -k -n server,qr -c blue,green \"npm:_serve\" \"npm:_qr:https\"",
+    "_serve": "vite --host 0.0.0.0 --port 5173",
+    "_qr": "node scripts/qr.mjs",
+    "_qr:https": "cross-env USE_HTTPS=1 node scripts/qr.mjs",
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "build": "vite build",
+    "preview": "vite preview",
+    "pack": "npm run build && evenhub pack app.json dist -o onsa.ehpk"
+  },
+  "dependencies": {
+    "@evenrealities/even_hub_sdk": "^0.0.7"
+  },
+  "devDependencies": {
+    "@evenrealities/evenhub-cli": "^0.1.5",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}
