@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Onsa — Even G2 Tuner</title>
+  <script type="module" crossorigin src="/onsa/assets/index-C5vaTmhZ.js"></script>
+  <link rel="stylesheet" crossorigin href="/onsa/assets/index-3AdNtw1r.css">
+</head>
+<body>
+  <div id="app">
+    <h1>Onsa — G2 Chromatic Tuner</h1>
+
+    <div class="btn-row">
+      <button id="connectBtn" type="button">Connect Glasses</button>
+      <button id="actionBtn" type="button">Toggle Mic</button>
+    </div>
+
+    <div id="status">Onsa ready — Connect を押してからマイクを許可してください</div>
+
+    <section id="tuner-panel">
+      <div class="big-note">
+        <span id="note-name">--</span>
+        <span id="note-octave"></span>
+      </div>
+      <div class="hz"><span id="hz-value">0.00</span> Hz</div>
+      <div class="meter-wrap">
+        <div class="meter-track">
+          <div class="meter-tick" data-pos="0"></div>
+          <div class="meter-tick" data-pos="25"></div>
+          <div class="meter-tick center" data-pos="50"></div>
+          <div class="meter-tick" data-pos="75"></div>
+          <div class="meter-tick" data-pos="100"></div>
+          <div id="meter-needle" class="meter-needle"></div>
+        </div>
+        <div class="cents"><span id="cents-value">0</span> cent</div>
+      </div>
+      <div class="detail">
+        Target: <span id="target-hz">—</span> Hz &nbsp;|&nbsp;
+        RMS: <span id="rms-value">0.00</span>
+      </div>
+    </section>
+
+    <pre id="event-log" style="display:none"></pre>
+  </div>
+
+</body>
+</html>
