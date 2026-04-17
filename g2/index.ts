@@ -7,7 +7,7 @@ export const app: AppModule = {
   pageTitle: 'Onsa — G2 Chromatic Tuner',
   connectLabel: 'Connect Glasses',
   actionLabel: 'Toggle Mic',
-  initialStatus: 'Onsa ready — Connect を押してからマイクを許可してください',
+  initialStatus: 'Onsa ready — Connect Glasses で G2 本体マイクを起動します',
   createActions: createOnsaActions,
 }
 

@@ -6,6 +6,7 @@ import {
   TextContainerUpgrade,
   waitForEvenAppBridge,
   type EvenAppBridge,
+  type EvenHubEvent,
 } from '@evenrealities/even_hub_sdk'
 import type { AppActions, SetStatus } from '../_shared/app-types'
 import { appendEventLog } from '../_shared/log'
@@ -16,17 +17,20 @@ import { buildCentsMeter, frequencyToNote, type NoteInfo } from '../lib/notes'
 // Constants
 // --------------------------------------------------------------------------
 
-const FFT_SIZE = 2048
-const DETECT_INTERVAL_MS = 80
-const G2_UPDATE_INTERVAL_MS = 150
+// G2 built-in microphone pushes signed 16-bit little-endian PCM at 16 kHz mono.
+const G2_SAMPLE_RATE = 16000
+const RING_SIZE = 2048  // 128 ms window at 16 kHz — fits 6+ periods of 50 Hz.
+
+const DETECT_INTERVAL_MS = 100
+const G2_UPDATE_INTERVAL_MS = 180
 const SMOOTH_WINDOW = 3
 const IN_TUNE_CENTS = 5
 
-// G2 layout (screen: 576 x 288)
-const ROW1_ID = 1  // big: note + hz
-const ROW2_ID = 2  // meter + cents
-const ROW3_ID = 3  // detail line
-const CAPTURE_ID = 4  // hidden list for event capture
+// G2 screen 576 x 288 layout
+const ROW1_ID = 1
+const ROW2_ID = 2
+const ROW3_ID = 3
+const CAPTURE_ID = 4
 
 const ROW1_WIDTH = 40
 const ROW2_WIDTH = 30
@@ -49,11 +53,10 @@ type UiRefs = {
 type OnsaState = {
   bridge: EvenAppBridge | null
   startupRendered: boolean
-  audio: AudioContext | null
-  analyser: AnalyserNode | null
-  mediaStream: MediaStream | null
-  buffer: Float32Array | null
-  running: boolean
+  unsubscribeEvents: (() => void) | null
+  ring: Float32Array
+  ringFilled: number
+  audioOn: boolean
   detectLoopId: number | null
   g2LoopId: number | null
   recentFreqs: number[]
@@ -64,16 +67,16 @@ type OnsaState = {
   lastG2Row2: string
   lastG2Row3: string
   setStatus: SetStatus | null
+  frameCount: number
 }
 
 const state: OnsaState = {
   bridge: null,
   startupRendered: false,
-  audio: null,
-  analyser: null,
-  mediaStream: null,
-  buffer: null,
-  running: false,
+  unsubscribeEvents: null,
+  ring: new Float32Array(RING_SIZE),
+  ringFilled: 0,
+  audioOn: false,
   detectLoopId: null,
   g2LoopId: null,
   recentFreqs: [],
@@ -84,6 +87,7 @@ const state: OnsaState = {
   lastG2Row2: '',
   lastG2Row3: '',
   setStatus: null,
+  frameCount: 0,
 }
 
 let uiRefs: UiRefs | null = null
@@ -118,6 +122,59 @@ function smoothFreq(raw: number): number {
   }
   const sorted = [...state.recentFreqs].sort((a, b) => a - b)
   return sorted[Math.floor(sorted.length / 2)]
+}
+
+// --------------------------------------------------------------------------
+// PCM handling
+// --------------------------------------------------------------------------
+
+// The SDK says audioPcm is Uint8Array, but after JSON bridge hops it can also
+// arrive as number[] or a base64-encoded string. Normalize every shape here.
+function coerceToUint8Array(value: unknown): Uint8Array {
+  if (value instanceof Uint8Array) return value
+  if (value instanceof ArrayBuffer) return new Uint8Array(value)
+  if (Array.isArray(value)) return Uint8Array.from(value as number[])
+  if (ArrayBuffer.isView(value)) {
+    const view = value as ArrayBufferView
+    return new Uint8Array(view.buffer, view.byteOffset, view.byteLength)
+  }
+  if (typeof value === 'string') {
+    // base64
+    try {
+      const bin = atob(value)
+      const arr = new Uint8Array(bin.length)
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i)
+      return arr
+    } catch {
+      return new Uint8Array(0)
+    }
+  }
+  return new Uint8Array(0)
+}
+
+function pcmInt16LeToFloat32(pcm: Uint8Array): Float32Array {
+  const sampleCount = pcm.byteLength >> 1
+  if (sampleCount === 0) return new Float32Array(0)
+  const view = new DataView(pcm.buffer, pcm.byteOffset, sampleCount * 2)
+  const out = new Float32Array(sampleCount)
+  for (let i = 0; i < sampleCount; i++) {
+    out[i] = view.getInt16(i * 2, true) / 32768
+  }
+  return out
+}
+
+function appendSamplesToRing(samples: Float32Array): void {
+  if (samples.length === 0) return
+  const ring = state.ring
+  if (samples.length >= RING_SIZE) {
+    ring.set(samples.subarray(samples.length - RING_SIZE))
+    state.ringFilled = RING_SIZE
+    return
+  }
+  const shift = samples.length
+  ring.copyWithin(0, shift)
+  ring.set(samples, RING_SIZE - shift)
+  state.ringFilled = Math.min(RING_SIZE, state.ringFilled + shift)
 }
 
 // --------------------------------------------------------------------------
@@ -172,14 +229,21 @@ function renderBrowser(note: NoteInfo | null, freq: number, rms: number): void {
 // G2 rendering
 // --------------------------------------------------------------------------
 
-function buildG2Lines(note: NoteInfo | null, freq: number, rms: number): {
+function buildG2Lines(note: NoteInfo | null, freq: number, rms: number, audioOn: boolean): {
   row1: string
   row2: string
   row3: string
 } {
+  if (!audioOn) {
+    return {
+      row1: padRight('Onsa — mic off', ROW1_WIDTH),
+      row2: padRight('Click to start tuning', ROW2_WIDTH),
+      row3: padRight('G2 mic 16kHz / A=440', ROW3_WIDTH),
+    }
+  }
   if (!note || freq <= 0) {
     return {
-      row1: padRight('--      listening...', ROW1_WIDTH),
+      row1: padRight('-- listening...', ROW1_WIDTH),
       row2: padRight('|---------+---------|   --c', ROW2_WIDTH),
       row3: padRight(`RMS ${rms.toFixed(3)}`, ROW3_WIDTH),
     }
@@ -198,7 +262,7 @@ function buildG2Lines(note: NoteInfo | null, freq: number, rms: number): {
 }
 
 async function renderG2Startup(bridge: EvenAppBridge): Promise<void> {
-  const lines = buildG2Lines(null, -1, 0)
+  const lines = buildG2Lines(null, -1, 0, state.audioOn)
 
   const row1 = new TextContainerProperty({
     containerID: ROW1_ID,
@@ -262,7 +326,7 @@ async function renderG2Startup(bridge: EvenAppBridge): Promise<void> {
 }
 
 async function pushG2Update(bridge: EvenAppBridge): Promise<void> {
-  const { row1, row2, row3 } = buildG2Lines(state.lastNote, state.lastFreq, state.lastRms)
+  const { row1, row2, row3 } = buildG2Lines(state.lastNote, state.lastFreq, state.lastRms, state.audioOn)
 
   const updates: Array<Promise<unknown>> = []
   if (row1 !== state.lastG2Row1) {
@@ -300,77 +364,37 @@ async function pushG2Update(bridge: EvenAppBridge): Promise<void> {
     try {
       await Promise.all(updates)
     } catch (error) {
-      console.warn('[onsa] G2 update failed, will retry later', error)
+      console.warn('[onsa] G2 update failed', error)
     }
   }
 }
 
 // --------------------------------------------------------------------------
-// Microphone + detection loop
+// Audio event handling
 // --------------------------------------------------------------------------
 
-async function ensureAudio(): Promise<void> {
-  if (state.audio && state.analyser && state.mediaStream) return
+function handleEvenHubEvent(event: EvenHubEvent): void {
+  if (!event.audioEvent) return
+  if (!state.audioOn) return
 
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: {
-      echoCancellation: false,
-      noiseSuppression: false,
-      autoGainControl: false,
-    },
-    video: false,
-  })
+  const raw = (event.audioEvent as { audioPcm: unknown }).audioPcm
+  const pcm = coerceToUint8Array(raw)
+  if (pcm.byteLength === 0) return
 
-  const audio = new AudioContext()
-  if (audio.state === 'suspended') {
-    await audio.resume()
-  }
-  const source = audio.createMediaStreamSource(stream)
-  const analyser = audio.createAnalyser()
-  analyser.fftSize = FFT_SIZE
-  analyser.smoothingTimeConstant = 0
-  source.connect(analyser)
+  const floats = pcmInt16LeToFloat32(pcm)
+  appendSamplesToRing(floats)
 
-  state.audio = audio
-  state.analyser = analyser
-  state.mediaStream = stream
-  state.buffer = new Float32Array(analyser.fftSize)
-}
-
-function stopAudio(): void {
-  if (state.detectLoopId !== null) {
-    window.clearInterval(state.detectLoopId)
-    state.detectLoopId = null
+  state.frameCount += 1
+  if (state.frameCount <= 3 || state.frameCount % 100 === 0) {
+    console.log(`[onsa] audio frame #${state.frameCount}, ${pcm.byteLength} bytes (${floats.length} samples)`)
   }
-  if (state.g2LoopId !== null) {
-    window.clearInterval(state.g2LoopId)
-    state.g2LoopId = null
-  }
-  if (state.mediaStream) {
-    state.mediaStream.getTracks().forEach((t) => t.stop())
-    state.mediaStream = null
-  }
-  if (state.audio) {
-    void state.audio.close()
-    state.audio = null
-  }
-  state.analyser = null
-  state.buffer = null
-  state.recentFreqs = []
-  state.lastNote = null
-  state.lastFreq = -1
-  state.lastRms = 0
-  renderBrowser(null, -1, 0)
 }
 
 function runDetectTick(): void {
-  const analyser = state.analyser
-  const buffer = state.buffer
-  const audio = state.audio
-  if (!analyser || !buffer || !audio) return
+  if (!state.audioOn) return
+  if (state.ringFilled < RING_SIZE) return
 
-  analyser.getFloatTimeDomainData(buffer as Float32Array<ArrayBuffer>)
-  const result = detectPitch(buffer, audio.sampleRate)
+  const result = detectPitch(state.ring, G2_SAMPLE_RATE)
   state.lastRms = result.rms
 
   const smoothed = smoothFreq(result.freq)
@@ -392,6 +416,13 @@ function startDetectLoop(): void {
   state.detectLoopId = window.setInterval(runDetectTick, DETECT_INTERVAL_MS)
 }
 
+function stopDetectLoop(): void {
+  if (state.detectLoopId !== null) {
+    window.clearInterval(state.detectLoopId)
+    state.detectLoopId = null
+  }
+}
+
 function startG2Loop(): void {
   if (state.g2LoopId !== null) return
   if (!state.bridge) return
@@ -401,82 +432,121 @@ function startG2Loop(): void {
   }, G2_UPDATE_INTERVAL_MS)
 }
 
+function stopG2Loop(): void {
+  if (state.g2LoopId !== null) {
+    window.clearInterval(state.g2LoopId)
+    state.g2LoopId = null
+  }
+}
+
+function resetAudioState(): void {
+  state.ringFilled = 0
+  state.ring.fill(0)
+  state.recentFreqs = []
+  state.lastNote = null
+  state.lastFreq = -1
+  state.lastRms = 0
+  state.frameCount = 0
+  renderBrowser(null, -1, 0)
+}
+
 // --------------------------------------------------------------------------
-// Public actions
+// Mic control
 // --------------------------------------------------------------------------
 
-async function startListening(): Promise<boolean> {
+async function startG2Mic(): Promise<boolean> {
+  if (!state.bridge) {
+    state.setStatus?.('G2 bridge 未接続です。Connect Glasses を先に実行してください。')
+    appendEventLog('Onsa: mic start blocked — no bridge')
+    return false
+  }
   try {
-    await ensureAudio()
+    const ok = await state.bridge.audioControl(true)
+    if (!ok) {
+      state.setStatus?.('G2 マイクの起動に失敗しました。')
+      appendEventLog('Onsa: audioControl(true) returned false')
+      return false
+    }
   } catch (error) {
-    console.error('[onsa] getUserMedia failed', error)
-    state.setStatus?.('マイクへのアクセスが拒否されました。ブラウザ設定を確認してください。')
-    appendEventLog('Onsa: mic permission denied or unavailable')
+    console.error('[onsa] audioControl(true) threw', error)
+    state.setStatus?.('G2 マイクの起動エラー。コンソール確認してください。')
     return false
   }
 
-  state.running = true
+  state.audioOn = true
+  resetAudioState()
   startDetectLoop()
-  if (state.bridge) {
-    startG2Loop()
-  }
-  appendEventLog('Onsa: microphone listening')
+  startG2Loop()
+  appendEventLog('Onsa: G2 microphone ON')
   return true
 }
 
-function stopListening(): void {
-  state.running = false
-  stopAudio()
-  appendEventLog('Onsa: microphone stopped')
+async function stopG2Mic(): Promise<void> {
+  if (!state.bridge) return
+  try {
+    await state.bridge.audioControl(false)
+  } catch (error) {
+    console.warn('[onsa] audioControl(false) failed', error)
+  }
+  state.audioOn = false
+  stopDetectLoop()
+  // G2 loop is kept alive to push the "mic off" screen once.
+  if (state.bridge && state.startupRendered) {
+    void pushG2Update(state.bridge)
+  }
+  stopG2Loop()
+  resetAudioState()
+  appendEventLog('Onsa: G2 microphone OFF')
 }
+
+// --------------------------------------------------------------------------
+// Public actions
+// --------------------------------------------------------------------------
 
 export function createOnsaActions(setStatus: SetStatus): AppActions {
   state.setStatus = setStatus
 
   return {
     async connect() {
-      setStatus('Onsa: connecting to Even bridge...')
+      setStatus('Onsa: Even bridge 接続中...')
       appendEventLog('Onsa: connect requested')
 
       try {
         if (!state.bridge) {
           state.bridge = await withTimeout(waitForEvenAppBridge(), 4000)
         }
+        if (!state.unsubscribeEvents) {
+          state.unsubscribeEvents = state.bridge.onEvenHubEvent(handleEvenHubEvent)
+        }
         if (!state.startupRendered) {
           await renderG2Startup(state.bridge)
         }
-        setStatus('Onsa: G2 接続成功。Toggle Mic でマイク開始。')
-        appendEventLog('Onsa: bridge ready, page rendered')
       } catch (error) {
-        console.warn('[onsa] bridge unavailable, running browser-only', error)
-        setStatus('Onsa: G2 未検出。ブラウザのみで動作します。Toggle Mic で開始。')
-        appendEventLog('Onsa: browser-only mode (bridge missing)')
+        console.warn('[onsa] bridge unavailable', error)
+        setStatus('Onsa: G2 bridge が見つかりません。Even Hub アプリから起動してください。')
+        appendEventLog('Onsa: bridge missing — tuner needs G2 to run')
+        return
       }
 
-      // In either mode, automatically begin listening so the UI is immediately useful.
-      const ok = await startListening()
-      if (ok) {
-        setStatus(
-          state.bridge
-            ? 'Onsa: マイク稼働中 → G2 にリアルタイム表示中'
-            : 'Onsa: マイク稼働中 (ブラウザのみ)',
-        )
+      const started = await startG2Mic()
+      if (started) {
+        setStatus('Onsa: G2 マイク稼働中。音を出すと音名・Hz・セントがG2に出ます。')
       }
     },
 
     async action() {
-      if (state.running) {
-        stopListening()
-        setStatus('Onsa: マイク停止')
+      if (!state.bridge) {
+        setStatus('Onsa: 先に Connect Glasses を実行してください。')
         return
       }
-      const ok = await startListening()
-      if (ok) {
-        setStatus(
-          state.bridge
-            ? 'Onsa: マイク稼働中 → G2 にリアルタイム表示中'
-            : 'Onsa: マイク稼働中 (ブラウザのみ)',
-        )
+      if (state.audioOn) {
+        await stopG2Mic()
+        setStatus('Onsa: G2 マイク停止')
+      } else {
+        const started = await startG2Mic()
+        if (started) {
+          setStatus('Onsa: G2 マイク稼働中')
+        }
       }
     },
   }
