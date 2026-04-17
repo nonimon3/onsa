@@ -13,7 +13,9 @@
     "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "vite build",
     "preview": "vite preview",
-    "pack": "npm run build && evenhub pack app.json dist -o onsa.ehpk"
+    "pack": "npm run build && evenhub pack app.json dist -o onsa.ehpk",
+    "deploy": "npm run build && gh-pages -d dist",
+    "qr:pages": "evenhub qr --url https://nonimon3.github.io/onsa/"
   },
   "dependencies": {
     "@evenrealities/even_hub_sdk": "^0.0.7"
@@ -23,6 +25,7 @@
     "@vitejs/plugin-basic-ssl": "^2.3.0",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
+    "gh-pages": "^6.3.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
   }
