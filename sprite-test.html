@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>G2 Sprite Persistence Test</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; padding: 16px; background: #0c0c0c; color: #eee; }
+    #app { max-width: 640px; margin: 0 auto; }
+    h1 { font-size: 18px; margin: 0 0 12px; }
+    button { display: block; width: 100%; padding: 14px; margin: 8px 0; font-size: 15px; font-weight: 600; border: 1px solid #3a3a3a; background: #1c1c1c; color: #f2f2f2; border-radius: 8px; cursor: pointer; }
+    button:disabled { opacity: 0.4; }
+    .primary { background: #2a5fbf; border-color: #3a6fc0; }
+    .hint { color: #8f8; font-size: 12px; margin: 4px 0 0; padding: 0 4px; }
+    #status { font-size: 13px; padding: 10px; background: #141414; border-radius: 6px; border: 1px solid #262626; margin-top: 12px; }
+    #log { font-family: ui-monospace, monospace; font-size: 11px; white-space: pre-wrap; padding: 10px; background: #0a0a0a; border-radius: 6px; border: 1px solid #1f1f1f; max-height: 40vh; overflow: auto; margin-top: 12px; }
+    .step { border-top: 1px solid #262626; padding-top: 8px; margin-top: 12px; }
+    .step-title { font-weight: bold; color: #bfb; font-size: 13px; }
+    img#preview { display: block; margin: 6px auto 12px; width: 128px; height: 128px; border: 2px solid #555; image-rendering: pixelated; background: #222; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>G2 Sprite Persistence Test</h1>
+    <p class="hint">目的: <code>updateImageRawData</code> で送ったピクセルが <code>rebuildPageContainer</code> で位置変更しても残るか検証</p>
+
+    <img id="preview" alt="sprite preview" />
+
+    <div class="step">
+      <div class="step-title">Step 1</div>
+      <button id="btn-connect" class="primary">1. Connect G2 + 初期ページ</button>
+      <p class="hint">ImageContainer を (x=50, y=50, w=80, h=80) で作成</p>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Step 2</div>
+      <button id="btn-load" disabled>2. 画像データを送信 (updateImageRawData)</button>
+      <p class="hint">X マークのビットマップを送る → G2 の位置 A に見えるはず</p>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Step 3 (本題)</div>
+      <button id="btn-move-b" disabled>3. 位置 B に移動 (画像データ送信なし)</button>
+      <p class="hint">rebuildPageContainer で (x=300, y=150) に。画像が **そこに現れれば残存、消えればクリア**</p>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Step 4</div>
+      <button id="btn-move-a" disabled>4. 位置 A に戻す (画像データ送信なし)</button>
+      <p class="hint">rebuildPageContainer で (x=50, y=50) に戻す。画像データが持続してるか再確認</p>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Step 5</div>
+      <button id="btn-re-upload" disabled>5. 画像データを再送 (位置 B)</button>
+      <p class="hint">万が一消えてた場合のベースライン確認用</p>
+    </div>
+
+    <div id="status">Ready — Even Hub アプリから開いてください</div>
+    <div id="log"></div>
+  </div>
+
+  <script type="module" src="/src/sprite-test.ts"></script>
+</body>
+</html>

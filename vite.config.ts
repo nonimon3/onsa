@@ -1,8 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import basicSsl from '@vitejs/plugin-basic-ssl'
+import { resolve } from 'node:path'
 
-// `base` is set for GitHub Pages so assets resolve under /onsa/.
-// For local dev (`npm run dev`) Vite still serves from `/`.
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const useHttps = env.VITE_HTTPS === '1' || env.VITE_HTTPS === 'true'
@@ -13,6 +12,14 @@ export default defineConfig(({ command, mode }) => {
     server: {
       host: true,
       port: 5173,
+    },
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html'),
+          spriteTest: resolve(__dirname, 'sprite-test.html'),
+        },
+      },
     },
   }
 })
