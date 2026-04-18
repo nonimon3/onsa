@@ -19,7 +19,7 @@
     .step-title { font-weight: bold; color: #bfb; font-size: 13px; }
     img#preview { display: block; margin: 6px auto 12px; width: 128px; height: 128px; border: 2px solid #555; image-rendering: pixelated; background: #222; }
   </style>
-  <script type="module" crossorigin src="/onsa/assets/spriteTest-SAi7Vd_i.js"></script>
+  <script type="module" crossorigin src="/onsa/assets/spriteTest-1a0pnPdo.js"></script>
   <link rel="modulepreload" crossorigin href="/onsa/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/onsa/assets/index-qf1OuiLH.js">
 </head>
@@ -29,6 +29,18 @@
     <p class="hint">目的: <code>updateImageRawData</code> で送ったピクセルが <code>rebuildPageContainer</code> で位置変更しても残るか検証</p>
 
     <img id="preview" alt="sprite preview" />
+
+    <div class="step">
+      <div class="step-title">Step 0 (診断)</div>
+      <button id="btn-diag" class="primary">0. 診断 (ブリッジ + G2接続状態 + デバイス情報)</button>
+      <p class="hint">ブリッジが見えてるか、G2がConnectedか、装着中か、等を Log に出す</p>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Step 0.5 (画像抜きテスト)</div>
+      <button id="btn-text-only">0.5. テキストだけでページ作成 (画像無し)</button>
+      <p class="hint">画像コンテナ無しで "Hello G2" だけ表示してみる。これが出ないなら根本的にブリッジが効いてない</p>
+    </div>
 
     <div class="step">
       <div class="step-title">Step 1</div>
