@@ -19,7 +19,7 @@
     .step-title { font-weight: bold; color: #bfb; font-size: 13px; }
     img#preview { display: block; margin: 6px auto 12px; width: 128px; height: 128px; border: 2px solid #555; image-rendering: pixelated; background: #222; }
   </style>
-  <script type="module" crossorigin src="/onsa/assets/spriteTest-DE4h_E7L.js"></script>
+  <script type="module" crossorigin src="/onsa/assets/spriteTest-B14_s6uD.js"></script>
   <link rel="modulepreload" crossorigin href="/onsa/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/onsa/assets/index-D3TejViw.js">
 </head>
@@ -76,6 +76,18 @@
       <div class="step-title">Step 5</div>
       <button id="btn-re-upload" disabled>5. 画像データを再送 (位置 B)</button>
       <p class="hint">万が一消えてた場合のベースライン確認用</p>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Step 6 (フォントドット表現)</div>
+      <button id="btn-braille-fill">6a. Braille 全ドット塗り (⣿ 敷き詰め)</button>
+      <p class="hint">点字1文字=2x4 ドット。出なければフォントに点字なし</p>
+      <button id="btn-braille-x">6b. Braille で X パターン (16x16 ドット)</button>
+      <p class="hint">点字で細かいドット絵が G2 で描けるか</p>
+      <button id="btn-block-x">6c. Block element で X (▀▄█ 使用)</button>
+      <p class="hint">2x2 ドット相当。点字が出ない時のフォールバック</p>
+      <button id="btn-braille-anim">6d. Braille アニメーション (textContainerUpgrade で動く点)</button>
+      <p class="hint">文字更新の遅延を計測。1秒の画像送信より速いか</p>
     </div>
 
     <div id="status">Ready — Even Hub アプリから開いてください</div>
