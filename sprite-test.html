@@ -21,9 +21,9 @@
     .step { border-top: 1px solid #262626; padding-top: 8px; margin-top: 12px; }
     .step-title { font-weight: bold; color: #bfb; font-size: 13px; }
   </style>
-  <script type="module" crossorigin src="/onsa/assets/spriteTest-DfMuFs2K.js"></script>
+  <script type="module" crossorigin src="/onsa/assets/spriteTest-DvpE1U60.js"></script>
   <link rel="modulepreload" crossorigin href="/onsa/assets/modulepreload-polyfill-B5Qt9EMX.js">
-  <link rel="modulepreload" crossorigin href="/onsa/assets/index-CfEFZ8r1.js">
+  <link rel="modulepreload" crossorigin href="/onsa/assets/index-qf1OuiLH.js">
 </head>
 <body>
   <div id="app">
@@ -69,6 +69,14 @@
       <div class="step-title">6. pong 方式 ● 斜め移動 (28×10 grid)</div>
       <button id="btn-diagonal">6. ● を左上→右下へ斜め移動</button>
       <p class="hint">全画面 TextContainer + 改行込み grid。pong サンプルと同じ方式</p>
+    </div>
+
+    <div class="step">
+      <div class="step-title">7. PNG フォーマット比較 (200×100 同じ X)</div>
+      <button id="btn-png-rgb8" class="primary">7a. RGB 8bit (886 B) 送信</button>
+      <button id="btn-png-gray8">7b. Gray 8bit (616 B) 送信</button>
+      <button id="btn-png-gray1">7c. Gray 1bit (433 B) 送信</button>
+      <p class="hint">G2 は黒白表示 (SDK コメント「黑白图」)。通るフォーマットで最小サイズを選ぶ</p>
     </div>
 
     <div id="status">Ready — Even Hub アプリから開いてください</div>
