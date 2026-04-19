@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>G2 Font Dot Test</title>
+  <title>G2 Font Dot Test (Block)</title>
   <style>
     :root { color-scheme: dark; font-family: system-ui, sans-serif; }
     body { margin: 0; padding: 16px; background: #0c0c0c; color: #eee; }
@@ -21,41 +21,34 @@
     .step { border-top: 1px solid #262626; padding-top: 8px; margin-top: 12px; }
     .step-title { font-weight: bold; color: #bfb; font-size: 13px; }
   </style>
-  <script type="module" crossorigin src="/onsa/assets/spriteTest-w-vw55XM.js"></script>
+  <script type="module" crossorigin src="/onsa/assets/spriteTest-COcVwsYO.js"></script>
   <link rel="modulepreload" crossorigin href="/onsa/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/onsa/assets/index-CfEFZ8r1.js">
 </head>
 <body>
   <div id="app">
-    <h1>G2 Font Dot Test</h1>
-    <p class="hint">Unicode 文字で G2 にドット絵が描けるか + どれだけ速いかの検証</p>
+    <h1>G2 Font Dot Test (Block element)</h1>
+    <p class="hint">G2 フォントは Braille 非対応、Block element (▀▄█) のみ描画可 → 2×2 dot/char</p>
 
     <div class="step">
       <div class="step-title">0. 診断</div>
       <button id="btn-diag" class="primary">0. Bridge &amp; Device Info</button>
-      <p class="hint">G2 ブリッジ接続確認</p>
     </div>
 
     <div class="step">
-      <div class="step-title">1. Braille 全ドット</div>
-      <button id="btn-braille-fill" class="primary">1. ⣿ を 32×6 (64×24 dot) で敷き詰め</button>
-      <p class="hint">フォントに点字があれば塗りつぶし。なければ豆腐/・になる</p>
+      <div class="step-title">1. Block 全塗り</div>
+      <button id="btn-block-fill" class="primary">1. █ を 32×6 (64×12 dot) で敷き詰め</button>
     </div>
 
     <div class="step">
-      <div class="step-title">2. Braille で X</div>
-      <button id="btn-braille-x">2. 点字で X を 16×16 dot</button>
+      <div class="step-title">2. Block で X</div>
+      <button id="btn-block-x">2. ▀▄█ で X 16×16 dot</button>
     </div>
 
     <div class="step">
-      <div class="step-title">3. Block element で X</div>
-      <button id="btn-block-x">3. ▀▄█ で X (点字無しフォールバック)</button>
-    </div>
-
-    <div class="step">
-      <div class="step-title">4. アニメ速度計測 (Block element)</div>
-      <button id="btn-braille-anim">4. 動く点 ×16 frame (textContainerUpgrade)</button>
-      <p class="hint">画像送信 (約 1000 ms/回) と比較。Block しか描けないので 2×2 dot grid</p>
+      <div class="step-title">3. アニメ速度計測</div>
+      <button id="btn-block-anim">3. 動く点 ×16 frame (textContainerUpgrade)</button>
+      <p class="hint">画像送信 (≈1000 ms/回) と比較</p>
     </div>
 
     <div id="status">Ready — Even Hub アプリから開いてください</div>
