@@ -21,7 +21,7 @@
     .step { border-top: 1px solid #262626; padding-top: 8px; margin-top: 12px; }
     .step-title { font-weight: bold; color: #bfb; font-size: 13px; }
   </style>
-  <script type="module" crossorigin src="/onsa/assets/spriteTest-B1JkUT_E.js"></script>
+  <script type="module" crossorigin src="/onsa/assets/spriteTest-DfMuFs2K.js"></script>
   <link rel="modulepreload" crossorigin href="/onsa/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/onsa/assets/index-CfEFZ8r1.js">
 </head>
@@ -63,6 +63,12 @@
       <div class="step-title">5. 縦スクロール (4 container 擬似)</div>
       <button id="btn-vscroll">5. 10行のテキストを縦に流す</button>
       <p class="hint">container 上限 4 なので同時表示 4 行。textContainerUpgrade で各行の content を 1 段上にシフト</p>
+    </div>
+
+    <div class="step">
+      <div class="step-title">6. pong 方式 ● 斜め移動 (28×10 grid)</div>
+      <button id="btn-diagonal">6. ● を左上→右下へ斜め移動</button>
+      <p class="hint">全画面 TextContainer + 改行込み grid。pong サンプルと同じ方式</p>
     </div>
 
     <div id="status">Ready — Even Hub アプリから開いてください</div>
