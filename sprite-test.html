@@ -21,7 +21,7 @@
     .step { border-top: 1px solid #262626; padding-top: 8px; margin-top: 12px; }
     .step-title { font-weight: bold; color: #bfb; font-size: 13px; }
   </style>
-  <script type="module" crossorigin src="/onsa/assets/spriteTest-Cj50IcrQ.js"></script>
+  <script type="module" crossorigin src="/onsa/assets/spriteTest-B2ZkgPLs.js"></script>
   <link rel="modulepreload" crossorigin href="/onsa/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/onsa/assets/index-CfEFZ8r1.js">
 </head>
@@ -48,9 +48,15 @@
     </div>
 
     <div class="step">
-      <div class="step-title">3. 1行アニメ速度計測</div>
-      <button id="btn-anim">3. 動く █ を 20 frame (textContainerUpgrade)</button>
-      <p class="hint">固定幅 40 char を textContainerUpgrade で書換。ms/frame を計測</p>
+      <div class="step-title">3. 横アニメ速度計測</div>
+      <button id="btn-anim">3. 動く █ を 20 frame (横方向)</button>
+      <p class="hint">固定幅 22 char を textContainerUpgrade で書換。ms/frame を計測</p>
+    </div>
+
+    <div class="step">
+      <div class="step-title">4. 縦アニメ (1行内 3 段階)</div>
+      <button id="btn-vanim">4. ▀█▄ を切替えつつ横移動 (24 frame)</button>
+      <p class="hint">1 行内で 3 段階の縦位置。上下解像度が必要なら 4 container 縦積み方式が別途必要</p>
     </div>
 
     <div id="status">Ready — Even Hub アプリから開いてください</div>
