@@ -21,7 +21,7 @@
     .step { border-top: 1px solid #262626; padding-top: 8px; margin-top: 12px; }
     .step-title { font-weight: bold; color: #bfb; font-size: 13px; }
   </style>
-  <script type="module" crossorigin src="/onsa/assets/spriteTest-B2ZkgPLs.js"></script>
+  <script type="module" crossorigin src="/onsa/assets/spriteTest-B1JkUT_E.js"></script>
   <link rel="modulepreload" crossorigin href="/onsa/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/onsa/assets/index-CfEFZ8r1.js">
 </head>
@@ -57,6 +57,12 @@
       <div class="step-title">4. 縦アニメ (1行内 3 段階)</div>
       <button id="btn-vanim">4. ▀█▄ を切替えつつ横移動 (24 frame)</button>
       <p class="hint">1 行内で 3 段階の縦位置。上下解像度が必要なら 4 container 縦積み方式が別途必要</p>
+    </div>
+
+    <div class="step">
+      <div class="step-title">5. 縦スクロール (4 container 擬似)</div>
+      <button id="btn-vscroll">5. 10行のテキストを縦に流す</button>
+      <p class="hint">container 上限 4 なので同時表示 4 行。textContainerUpgrade で各行の content を 1 段上にシフト</p>
     </div>
 
     <div id="status">Ready — Even Hub アプリから開いてください</div>
