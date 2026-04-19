@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>G2 Sprite Persistence Test</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>G2 Font Dot Test</title>
   <style>
     :root { color-scheme: dark; font-family: system-ui, sans-serif; }
     body { margin: 0; padding: 16px; background: #0c0c0c; color: #eee; }
@@ -17,82 +20,46 @@
     #log { font-family: ui-monospace, monospace; font-size: 11px; white-space: pre-wrap; padding: 10px; background: #0a0a0a; border-radius: 6px; border: 1px solid #1f1f1f; max-height: 40vh; overflow: auto; margin-top: 12px; }
     .step { border-top: 1px solid #262626; padding-top: 8px; margin-top: 12px; }
     .step-title { font-weight: bold; color: #bfb; font-size: 13px; }
-    img#preview { display: block; margin: 6px auto 12px; width: 128px; height: 128px; border: 2px solid #555; image-rendering: pixelated; background: #222; }
   </style>
-  <script type="module" crossorigin src="/onsa/assets/spriteTest-HrYHhvBO.js"></script>
+  <script type="module" crossorigin src="/onsa/assets/spriteTest-CaaqS7VI.js"></script>
   <link rel="modulepreload" crossorigin href="/onsa/assets/modulepreload-polyfill-B5Qt9EMX.js">
-  <link rel="modulepreload" crossorigin href="/onsa/assets/index-D3TejViw.js">
+  <link rel="modulepreload" crossorigin href="/onsa/assets/index-CfEFZ8r1.js">
 </head>
 <body>
   <div id="app">
-    <h1>G2 Sprite Persistence Test</h1>
-    <p class="hint">目的: <code>updateImageRawData</code> で送ったピクセルが <code>rebuildPageContainer</code> で位置変更しても残るか検証</p>
-
-    <img id="preview" alt="sprite preview" />
+    <h1>G2 Font Dot Test</h1>
+    <p class="hint">Unicode 文字で G2 にドット絵が描けるか + どれだけ速いかの検証</p>
 
     <div class="step">
-      <div class="step-title">Step 0 (診断)</div>
-      <button id="btn-diag" class="primary">0. 診断 (ブリッジ + G2接続状態 + デバイス情報)</button>
-      <p class="hint">ブリッジが見えてるか、G2がConnectedか、装着中か、等を Log に出す</p>
+      <div class="step-title">0. 診断</div>
+      <button id="btn-diag" class="primary">0. Bridge &amp; Device Info</button>
+      <p class="hint">G2 ブリッジ接続確認</p>
     </div>
 
     <div class="step">
-      <div class="step-title">Step 0.5 (画像抜きテスト)</div>
-      <button id="btn-text-only">0.5. テキストだけでページ作成 (画像無し)</button>
-      <p class="hint">画像コンテナ無しで "Hello G2" だけ表示してみる。これが出ないなら根本的にブリッジが効いてない</p>
+      <div class="step-title">1. Braille 全ドット</div>
+      <button id="btn-braille-fill" class="primary">1. ⣿ を 32×6 (64×24 dot) で敷き詰め</button>
+      <p class="hint">フォントに点字があれば塗りつぶし。なければ豆腐/・になる</p>
     </div>
 
     <div class="step">
-      <div class="step-title">Step 0.8 (既知動作PNG)</div>
-      <button id="btn-known-png">0.8. 既知動作 PNG (tetris logo 200x100 RGB) を送信</button>
-      <p class="hint">tetrisで実績のあるPNGで送信テスト。これが出れば自作PNGフォーマットの問題</p>
+      <div class="step-title">2. Braille で X</div>
+      <button id="btn-braille-x">2. 点字で X を 16×16 dot</button>
     </div>
 
     <div class="step">
-      <div class="step-title">Step 1</div>
-      <button id="btn-connect" class="primary">1. Connect G2 + 初期ページ</button>
-      <p class="hint">ImageContainer を (x=50, y=50, w=80, h=80) で作成</p>
+      <div class="step-title">3. Block element で X</div>
+      <button id="btn-block-x">3. ▀▄█ で X (点字無しフォールバック)</button>
     </div>
 
     <div class="step">
-      <div class="step-title">Step 2</div>
-      <button id="btn-load" disabled>2. 画像データを送信 (updateImageRawData)</button>
-      <p class="hint">X マークのビットマップを送る → G2 の位置 A に見えるはず</p>
-    </div>
-
-    <div class="step">
-      <div class="step-title">Step 3 (本題)</div>
-      <button id="btn-move-b" disabled>3. 位置 B に移動 (画像データ送信なし)</button>
-      <p class="hint">rebuildPageContainer で (x=300, y=150) に。画像が **そこに現れれば残存、消えればクリア**</p>
-    </div>
-
-    <div class="step">
-      <div class="step-title">Step 4</div>
-      <button id="btn-move-a" disabled>4. 位置 A に戻す (画像データ送信なし)</button>
-      <p class="hint">rebuildPageContainer で (x=50, y=50) に戻す。画像データが持続してるか再確認</p>
-    </div>
-
-    <div class="step">
-      <div class="step-title">Step 5</div>
-      <button id="btn-re-upload" disabled>5. 画像データを再送 (位置 B)</button>
-      <p class="hint">万が一消えてた場合のベースライン確認用</p>
-    </div>
-
-    <div class="step">
-      <div class="step-title">Step 6 (フォントドット表現)</div>
-      <button id="btn-braille-fill">6a. Braille 全ドット塗り (⣿ 敷き詰め)</button>
-      <p class="hint">点字1文字=2x4 ドット。出なければフォントに点字なし</p>
-      <button id="btn-braille-x">6b. Braille で X パターン (16x16 ドット)</button>
-      <p class="hint">点字で細かいドット絵が G2 で描けるか</p>
-      <button id="btn-block-x">6c. Block element で X (▀▄█ 使用)</button>
-      <p class="hint">2x2 ドット相当。点字が出ない時のフォールバック</p>
-      <button id="btn-braille-anim">6d. Braille アニメーション (textContainerUpgrade で動く点)</button>
-      <p class="hint">文字更新の遅延を計測。1秒の画像送信より速いか</p>
+      <div class="step-title">4. アニメ速度計測</div>
+      <button id="btn-braille-anim">4. 動く点 ×16 frame (textContainerUpgrade)</button>
+      <p class="hint">画像送信 (約 1000 ms/回) と比較</p>
     </div>
 
     <div id="status">Ready — Even Hub アプリから開いてください</div>
     <div id="log"></div>
   </div>
-
 </body>
 </html>
