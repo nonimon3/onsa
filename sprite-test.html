@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>G2 Font Dot Test (Block)</title>
+  <title>G2 Font Dot Test v3 (1-line)</title>
   <style>
     :root { color-scheme: dark; font-family: system-ui, sans-serif; }
     body { margin: 0; padding: 16px; background: #0c0c0c; color: #eee; }
@@ -21,14 +21,14 @@
     .step { border-top: 1px solid #262626; padding-top: 8px; margin-top: 12px; }
     .step-title { font-weight: bold; color: #bfb; font-size: 13px; }
   </style>
-  <script type="module" crossorigin src="/onsa/assets/spriteTest-COcVwsYO.js"></script>
+  <script type="module" crossorigin src="/onsa/assets/spriteTest-Cj50IcrQ.js"></script>
   <link rel="modulepreload" crossorigin href="/onsa/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/onsa/assets/index-CfEFZ8r1.js">
 </head>
 <body>
   <div id="app">
-    <h1>G2 Font Dot Test (Block element)</h1>
-    <p class="hint">G2 フォントは Braille 非対応、Block element (▀▄█) のみ描画可 → 2×2 dot/char</p>
+    <h1>G2 Font Dot Test v3 — 1行 (no newline)</h1>
+    <p class="hint">G2 は改行で縞々になる仕様 → 単一 container・1行・固定幅で統一。onsa 本体のチューナーと同じパターン。</p>
 
     <div class="step">
       <div class="step-title">0. 診断</div>
@@ -36,19 +36,21 @@
     </div>
 
     <div class="step">
-      <div class="step-title">1. Block 全塗り</div>
-      <button id="btn-block-fill" class="primary">1. █ を 32×6 (64×12 dot) で敷き詰め</button>
+      <div class="step-title">1. █ で 1 行敷き詰め</div>
+      <button id="btn-fill" class="primary">1. 40 字の █ を 1 行だけ</button>
+      <p class="hint">改行なしなら塗りつぶし帯になるはず</p>
     </div>
 
     <div class="step">
-      <div class="step-title">2. Block で X</div>
-      <button id="btn-block-x">2. ▀▄█ で X 16×16 dot</button>
+      <div class="step-title">2. Block variation</div>
+      <button id="btn-variety">2. ▀▄█▖▗▘▝▌▐ ... を 1 行</button>
+      <p class="hint">Block 文字が個別にちゃんと描画されるか</p>
     </div>
 
     <div class="step">
-      <div class="step-title">3. アニメ速度計測</div>
-      <button id="btn-block-anim">3. 動く点 ×16 frame (textContainerUpgrade)</button>
-      <p class="hint">画像送信 (≈1000 ms/回) と比較</p>
+      <div class="step-title">3. 1行アニメ速度計測</div>
+      <button id="btn-anim">3. 動く █ を 20 frame (textContainerUpgrade)</button>
+      <p class="hint">固定幅 40 char を textContainerUpgrade で書換。ms/frame を計測</p>
     </div>
 
     <div id="status">Ready — Even Hub アプリから開いてください</div>
